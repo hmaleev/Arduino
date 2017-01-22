@@ -21,6 +21,8 @@ void setup() {
   // Initialize device.
   dht.begin();
   sensor_t sensor;
+  dht.temperature().getSensor(&sensor);
+  dht.humidity().getSensor(&sensor);
   // Set delay between sensor readings based on sensor details.
   delayMS = sensor.min_delay / 1000;
 }
@@ -52,7 +54,7 @@ void loop() {
   }
 
   Serial.print(temperature);
-  Serial.print(" *C");
+  Serial.print("*C");
   Serial.print("/");
   Serial.print(humidity);
   Serial.println("%");  
