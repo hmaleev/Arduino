@@ -17,12 +17,12 @@
 
 #define DHTPIN            2         // Pin connected to the DHT sensor.
 #define DHTTYPE           DHT21     // DHT 21 (AM2301)
-SoftwareSerial BT(10, 11);    // RX, TX
+SoftwareSerial BT(6, 7);    // RX, TX
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 uint32_t delayMS;
 
-// Bluetooth module HC-06 is connected on pins 10(RX) and 11(TX). 
+// Bluetooth module HC-06 is connected on pins 6(RX) and 7(TX). 
 //This means that data passed to Serial.print() function is sent via bluetooth to other devices
 
 void setup() {
