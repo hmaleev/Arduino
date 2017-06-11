@@ -20,7 +20,9 @@ int lightPin = 0;   // define a pin for Photo resistor
 int ledPin= 13;     // define a pin for LED
 int laserPin = 4;   // define a pin for the laser module
 
-String dataToSend =  String(20);                         // string for data to send
+String dataToSend =  String();    // string for data to send
+String userID =  String("---");  
+boolean laserStarted;
 
 SoftwareSerial BT(6, 7);    // RX, TX
 
@@ -35,7 +37,7 @@ constexpr uint8_t RST_PIN = 9;     // Configurable, see typical pin layout above
 constexpr uint8_t SS_PIN = 10;     // Configurable, see typical pin layout above
 MFRC522 mfrc522(SS_PIN, RST_PIN);   // Create MFRC522 instance
 
-int maxCounter = 1;
+int maxCounter = 10;
 int counter = 0;
           
 void setup()
@@ -59,18 +61,20 @@ void setup()
     // Set delay between sensor readings based on sensor details.
     delayMS = sensor.min_delay / 1000;
   
-
     pinMode(ledPin, OUTPUT);
     pinMode(laserPin, OUTPUT);
-    dataToSend = "---|";
+    String userID =  String("---");
+    dataToSend =  userID+ "|";
     digitalWrite(4, HIGH); 
+    laserStarted = true;
 }
 
 void loop()
 {
 
   if(dataToSend.length()>=6){
-    dataToSend = "---|";
+//    dataToSend = "---|";
+      dataToSend =  userID+ "|";
   }
 
 //------------------------RFID -------------------
@@ -101,7 +105,7 @@ void loop()
             }
 
             //PRINT FIRST NAME
-            String userID =  String();
+            userID = String();
             for (uint8_t i = 0; i < 16; i++)
             {
                 if (buffer1[i] != 32) {
@@ -110,9 +114,11 @@ void loop()
                     userID += String(character);
                 }
             }
+           
             
-            dataToSend = userID+"|";
             if(userID == "420"){
+               dataToSend = userID+"|";
+              
               Serial.println("ACCESS GRANTED");
               // SEND SIGNAL TO UNLOCK DOOR FOR 10 SECONDS
             } else {
@@ -131,15 +137,20 @@ void loop()
 
 //------------------------LASER DETECTION START ------------------
     int laserData = analogRead(lightPin);
-    if (laserData < 900) {
+    if (laserData > 900) {
         //Serial.println("Laser stopped");
         digitalWrite(ledPin, HIGH);
         dataToSend += "0|";
-
+        laserStarted = false;
     } else {
         // Serial.println("Laser Working");
         digitalWrite(ledPin, LOW);
         dataToSend += "1|";
+        // the door is closed 
+        if(userID != "---" && laserStarted == false){
+           userID = String("---");
+           laserStarted = true;
+        }
     }
 //------------------------LASER DETECTION END ------------------
 
@@ -171,17 +182,14 @@ void loop()
     delay(50); //shorter delay for faster response to light.
 
 //------------------------BLUETOOTH COMMUNICATION  START ------------------
-//    if(counter == maxCounter){
       counter=0;
-      dataToSend +=  String(temperature, 2) +"|";
-    
-    dataToSend +=  String(humidity, 2) +"|";
+      dataToSend +=  String(temperature, 2) +"|";   
+      dataToSend +=  String(humidity, 2) +"|";
     
       Serial.println(dataToSend);
       Serial.println();
       BT.print(dataToSend);
       BT.println("");
-//    }
 //------------------------BLUETOOTH COMMUNICATION  END ------------------
 
     counter++;
